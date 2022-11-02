@@ -1,0 +1,24 @@
+{
+  "name": "pictionary",
+  "version": "1.0.0",
+  "description": "Multiplayer Game as part of CS251 Project",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prerak-123/Pictionary.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/prerak-123/Pictionary/issues"
+  },
+  "homepage": "https://github.com/prerak-123/Pictionary#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.5.3"
+  }
+}
