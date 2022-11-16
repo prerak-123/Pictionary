@@ -1,5 +1,6 @@
-// 'use strict';
+"use strict";
 const socket = io("http://localhost:3000");
+
 
 function joinRoom(e) {
 	e.preventDefault();
@@ -16,7 +17,7 @@ function makeRoom(e) {
 }
 
 function App(props) {
-	const [page, changePage] = React.useState("roomButtons");
+	const [page, changePage] = React.useState("test");
 	const [currentRoomCode, changeRoomCode] = React.useState("");
 	const [numPlayers, changeNumPlayers] = React.useState(1);
 
@@ -52,7 +53,7 @@ function App(props) {
 					<i className="bi bi-plus-circle-fill mr-2" /> Make Room
 				</button>
 
-                <hr className="hruler"/>
+				<hr className="hruler" />
 
 				<form onSubmit={joinRoom}>
 					<input
@@ -85,9 +86,19 @@ function App(props) {
 					<div>
 						<p>Waiting For Players</p>
 						<p>Room Code: {currentRoomCode}</p>
-                        <h1><i class="bi bi-person" size={14}></i> {numPlayers}</h1>
+						<h1>
+							<i class="bi bi-person" size={14}></i> {numPlayers}
+						</h1>
 					</div>
 				</div>
+			</div>
+		);
+	}
+
+	if (page == "test") {
+		return (
+			<div>
+				Hi
 			</div>
 		);
 	}
