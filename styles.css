@@ -38,5 +38,23 @@
     flex-direction: row;
 }
 
+.sketch__div{
+    background-color: white;
+    width: 50vw;
+    height: 50vh;
+    margin-top: auto;
+    margin-bottom: auto;
+    display: flex;
+    flex-direction: row;
+}
 
+.canvas__buttons{
+    height: 100%;
+    background-color: orange;
+    padding: 5px;
+}
 
+.color__button{
+    height: 40px;
+    width: 40px;
+}
