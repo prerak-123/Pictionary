@@ -90,10 +90,21 @@ function makeRoom(e) {
 }
 
 function App(props) {
-	var myName = ""
+	// var myName = "";
+	// var myID = ""
+	// var playersInfo = undefined;
+	const [myName, changeMyName] = React.useState("");
+	const [myID, changeMyID] = React.useState("");
+	const [playersInfo, changePlayersInfo] = React.useState(undefined);
 	const [page, changePage] = React.useState("userName");
 	const [currentRoomCode, changeRoomCode] = React.useState("");
 	const [numPlayers, changeNumPlayers] = React.useState(1);
+	const [currTurn, changeCurrTurn] = React.useState("");
+
+	socket.on("userID", (data) => {
+		changeMyID(data);
+		console.log(myID);
+	})
 
 	React.useEffect(() => {
 		init();
@@ -106,7 +117,7 @@ function App(props) {
 			alert("Enter a name!");
 			return;
 		}
-		myName = inputRoomCode;
+		changeMyName(inputRoomCode);
 		socket.emit("userName", inputRoomCode);
 		changePage("roomButtons");
 	}
@@ -118,7 +129,7 @@ function App(props) {
 
 	socket.on("responseJoinRoom", (data) => {
 		if (!data[0]) {
-			alert("Invalid Room Code");
+			alert(data[1]);
 			return;
 		} else {
 			changePage("waitPlayers");
@@ -126,14 +137,20 @@ function App(props) {
 		}
 	});
 
-	socket.on("numPlayers", (data) => {
-		changeNumPlayers(data);
+	socket.on("playersInfo", (data) => {
+		console.log(data);
+		changeNumPlayers(data.length);
+		changePlayersInfo(data);
 	});
 
 	socket.on("serverStartGame", (data)=>{
 		changePage("gamePage");
 	})
 
+	socket.on("currTurn", (data) => {
+		console.log(data);
+		changeCurrTurn(data);
+	})
 	if(page=="userName"){
 		return(
 			<div className="main__user__name">
@@ -198,7 +215,7 @@ function App(props) {
 						<p>Waiting For Players</p>
 						<p>Room Code: {currentRoomCode}</p>
 						<h1>
-							<i class="bi bi-person" size={14}></i> {numPlayers}
+							<i className="bi bi-person" size={14}></i> {numPlayers}
 						</h1>
 						<button className="btn btn-lg btn-warning m-4" onClick={(e)=>{
 							if(numPlayers <= 1){
@@ -214,8 +231,11 @@ function App(props) {
 	}
 
 	if (page == "gamePage") {
+		console.log("Current Turn:" + currTurn);
+		console.log("myID" + myID);
 		return (
 			<>
+				{currTurn == myID && <div>Hii</div>}
 				<div id="sketch" className="sketch__div">
 					<div className="canvas__buttons">
 						<button
@@ -300,7 +320,7 @@ function App(props) {
 								ctx.lineWidth = 30;
 							}}
 						>
-							<h5><i class="bi bi-eraser-fill"></i></h5>
+							<h5><i className="bi bi-eraser-fill"></i></h5>
 						</button>
 					</div>
 					<canvas id="paint" className="paint__canvas"></canvas>

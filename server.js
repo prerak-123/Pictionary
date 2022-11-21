@@ -31,6 +31,8 @@ io.on("connection", (socket) => {
 		name: undefined
 	};
 
+	socket.emit("userID", socket.id);
+
 	socket.on("userName", (data) => {
 		users[socket.id]["name"] = data;
 		console.log(users);
@@ -64,13 +66,26 @@ io.on("connection", (socket) => {
 
 		if (!(data in roomCodes)) {
 			console.log("Invalid Room Code");
-			socket.emit("responseJoinRoom", [false, ""]);
+			socket.emit("responseJoinRoom", [false, "Invalid Room Code"]);
+			return;
+		}
+
+		if(roomCodes[data].length > 4){
+			console.log("Too Many Players!");
+			socket.emit("responseJoinRoom", [false, "Too Many Players!"]);
 			return;
 		}
 
 		socket.join(data);
 		roomCodes[data].push(socket.id);
-		io.to(data).emit("numPlayers", roomCodes[data].length);
+		// io.to(data).emit("numPlayers", roomCodes[data].length);
+		const userData = roomCodes[data].map((entry)=>{
+			return([entry,users[entry]["name"]]);
+		})
+
+		io.to(data).emit("playersInfo", userData);
+
+		console.log(userData);
 		users[socket.id]["room"] = data;
 		socket.emit("responseJoinRoom", [true, data]);
 	});
@@ -82,6 +97,7 @@ io.on("connection", (socket) => {
 		}
 
 		io.to(users[socket.id]["room"]).emit("serverStartGame", true);
+		gameLoop(users[socket.id]["room"]);
 	})
 
 	socket.on("disconnect", ()=>{
@@ -100,6 +116,27 @@ io.on("connection", (socket) => {
 			return;
 		}
 
-		io.to(userRoomCode).emit("numPlayers", roomCodes[userRoomCode].length);
+		// io.to(userRoomCode).emit("numPlayers", roomCodes[userRoomCode].length);
+
+		const userData = roomCodes[userRoomCode].map((entry)=>{
+			return([entry,users[entry]["name"]]);
+		})
+
+		io.to(userRoomCode).emit("playersInfo", userData);
 	})
+
+	function gameLoop(roomCode){
+		console.log(roomCode);
+		var currTurn = 0;
+		io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
+		
+		var gameInterval = setInterval(() => {
+			if(!(roomCode in roomCodes)){
+				clearInterval(gameInterval);
+				return;
+			}
+			currTurn = (currTurn + 1) % roomCodes[roomCode].length;
+			io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
+		}, 10000)
+	}
 });
