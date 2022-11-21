@@ -90,13 +90,26 @@ function makeRoom(e) {
 }
 
 function App(props) {
-	const [page, changePage] = React.useState("test");
+	var myName = ""
+	const [page, changePage] = React.useState("userName");
 	const [currentRoomCode, changeRoomCode] = React.useState("");
 	const [numPlayers, changeNumPlayers] = React.useState(1);
 
 	React.useEffect(() => {
 		init();
 	});
+
+	function userName(e){
+		e.preventDefault();
+		var inputRoomCode = document.getElementById("userNameInput").value;
+		if(inputRoomCode.length == 0){
+			alert("Enter a name!");
+			return;
+		}
+		myName = inputRoomCode;
+		socket.emit("userName", inputRoomCode);
+		changePage("roomButtons");
+	}
 
 	socket.on("newRoomCode", (data) => {
 		changePage("waitPlayers");
@@ -116,6 +129,27 @@ function App(props) {
 	socket.on("numPlayers", (data) => {
 		changeNumPlayers(data);
 	});
+
+	socket.on("serverStartGame", (data)=>{
+		changePage("gamePage");
+	})
+
+	if(page=="userName"){
+		return(
+			<div className="main__user__name">
+				<form onSubmit={userName}>
+
+					<h1>Enter Name</h1>
+					<input
+						type="text"
+						className="form-control w-75 mx-auto"
+						placeholder="Name"
+						id="userNameInput"
+					/>
+				</form>
+			</div>
+		)
+	}
 
 	if (page == "roomButtons") {
 		return (
@@ -166,13 +200,20 @@ function App(props) {
 						<h1>
 							<i class="bi bi-person" size={14}></i> {numPlayers}
 						</h1>
+						<button className="btn btn-lg btn-warning m-4" onClick={(e)=>{
+							if(numPlayers <= 1){
+								alert("Need atleast two players to start the game!");
+								return;
+							}
+							socket.emit("startGame", "");
+						}}>Start Game</button>
 					</div>
 				</div>
 			</div>
 		);
 	}
 
-	if (page == "test") {
+	if (page == "gamePage") {
 		return (
 			<>
 				<div id="sketch" className="sketch__div">

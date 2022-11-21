@@ -28,7 +28,13 @@ function generateString(length) {
 io.on("connection", (socket) => {
 	users[socket.id] = {
 		room: undefined,
+		name: undefined
 	};
+
+	socket.on("userName", (data) => {
+		users[socket.id]["name"] = data;
+		console.log(users);
+	})
 
 	socket.on("makeRoom", (data) => {
 		if (users[socket.id]["room"] != undefined) {
@@ -68,6 +74,15 @@ io.on("connection", (socket) => {
 		users[socket.id]["room"] = data;
 		socket.emit("responseJoinRoom", [true, data]);
 	});
+
+	socket.on("startGame", (data)=>{
+		if (users[socket.id]["room"] == undefined) {
+			console.log("Not in any room!");
+			return;
+		}
+
+		io.to(users[socket.id]["room"]).emit("serverStartGame", true);
+	})
 
 	socket.on("disconnect", ()=>{
 		console.log("Bye");

@@ -24,6 +24,19 @@
     font-family: 'Rubik Bubbles', cursive;
 }
 
+.main__user__name{
+    min-height: 20vh;
+    background-color: rgb(255, 191, 0);
+    border-radius: 5%;
+    padding: 10px;
+    margin-top: auto;
+    margin-bottom: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 5px 5px #9b9b9b;
+    font-family: 'Rubik Bubbles', cursive;
+}
+
 .wait__main{
     margin-top: auto;
     margin-bottom: auto;
