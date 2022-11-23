@@ -3,6 +3,7 @@
     flex-direction: column;
     background-image: url(images/bg3.jpg);
     background-size:cover;
+    min-height: 100vh;
 }
 
 .header{
@@ -49,6 +50,10 @@
     margin-top: auto;
     margin-bottom: auto;
     justify-content: center;
+    background-color: rgb(255, 85, 0);
+    padding: 20px;
+    border-radius: 5%;
+    box-shadow: 5px 5px #9b9b9b;
 }
 .wait__players{
     display: flex;

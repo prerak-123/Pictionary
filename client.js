@@ -1,6 +1,7 @@
 "use strict";
 const socket = io("http://localhost:3000");
 
+//Canvas
 //----------------------------------------------------
 
 var mouseDown = 0;
@@ -198,7 +199,6 @@ function App(props) {
 							onClick={makeRoom}
 							className="btn btn-lg btn-warning m-4"
 						>
-							{" "}
 							<i className="bi bi-plus-circle-fill mr-2" /> Make Room
 						</button>
 
@@ -235,7 +235,6 @@ function App(props) {
 						Pictionary <i class="bi bi-pencil-fill" />
 					</p>
 				</div>
-
 				<div className="flex wait__main mx-auto">
 					<div className="wait__players">
 						<div>
@@ -243,17 +242,30 @@ function App(props) {
 						</div>
 						<div>
 							<p>Waiting For Players</p>
-							<p>Room Code: {currentRoomCode} <button className="btn btn-dark" onClick={(e)=> {
-								 navigator.clipboard.writeText(currentRoomCode);
-								 changeBtnType("tick");
-								 setTimeout(() => {changeBtnType("copy")}, 5000);
-
-							}}>{ btnType == "copy" ? <i class="bi bi-clipboard-fill"/> : <i class="bi bi-check-lg"></i>}</button></p>
+							<p>
+								Room Code: {currentRoomCode}{" "}
+								<button
+									className="btn btn-dark"
+									onClick={(e) => {
+										navigator.clipboard.writeText(currentRoomCode);
+										changeBtnType("tick");
+										setTimeout(() => {
+											changeBtnType("copy");
+										}, 3000);
+									}}
+								>
+									{btnType == "copy" ? (
+										<i class="bi bi-clipboard-fill" />
+									) : (
+										<i class="bi bi-check-lg"></i>
+									)}
+								</button>
+							</p>
 							<h1>
 								<i className="bi bi-person" size={14}></i> {numPlayers}
 							</h1>
 							<button
-								className="btn btn-lg btn-success m-4"
+								className="btn btn-lg btn-info m-4"
 								onClick={(e) => {
 									if (numPlayers <= 1) {
 										alert("Need atleast two players to start the game!");
@@ -264,6 +276,9 @@ function App(props) {
 							>
 								Start Game
 							</button>
+						</div>
+						<div>
+							{playersInfo != undefined && playersInfo.map((name, index) => <div className="mx-5" key={index}>{index + 1}. {name[1]} {name[0] == myID && "(Me)"}</div>)}
 						</div>
 					</div>
 				</div>

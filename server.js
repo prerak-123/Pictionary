@@ -56,6 +56,14 @@ io.on("connection", (socket) => {
 
 		console.log(roomCodes);
 		socket.emit("newRoomCode", roomCode);
+
+		const userData = roomCodes[roomCode].map((entry)=>{
+			return([entry,users[entry]["name"]]);
+		})
+
+		console.log(userData);
+
+		io.to(roomCode).emit("playersInfo", userData);
 	});
 
 	socket.on("joinRoom", (data) => {
