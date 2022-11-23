@@ -134,17 +134,24 @@ io.on("connection", (socket) => {
 	})
 
 	function gameLoop(roomCode){
-		console.log(roomCode);
-		var currTurn = 0;
+		let time = 0;
+		let currTurn = 0;
 		io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
-		
-		var gameInterval = setInterval(() => {
+
+		let gameInterval = setInterval(() => {
 			if(!(roomCode in roomCodes)){
 				clearInterval(gameInterval);
 				return;
 			}
-			currTurn = (currTurn + 1) % roomCodes[roomCode].length;
-			io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
-		}, 10000)
+			time = time + 1;
+			if(time > 60){
+				time = 0;
+				currTurn = (currTurn + 1) % roomCodes[roomCode].length; 
+				io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
+			}
+
+			io.to(roomCode).emit("gameTime", time);
+		}, 1000);
+
 	}
 });

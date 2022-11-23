@@ -90,6 +90,18 @@ function makeRoom(e) {
 	socket.emit("makeRoom", "");
 }
 
+function GameHeader(props){
+	const [gameTime, changeGameTime] = React.useState(0);
+
+	socket.on("gameTime", (data) => {
+		changeGameTime(data);
+	})
+
+	return(
+		<div className="game__header">{gameTime}</div>
+	)
+}
+
 function App(props) {
 	// var myName = "";
 	// var myID = ""
@@ -97,7 +109,7 @@ function App(props) {
 	const [myName, changeMyName] = React.useState("");
 	const [myID, changeMyID] = React.useState("");
 	const [playersInfo, changePlayersInfo] = React.useState(undefined);
-	const [page, changePage] = React.useState("userName");
+	const [page, changePage] = React.useState("gamePage");
 	const [currentRoomCode, changeRoomCode] = React.useState("");
 	const [numPlayers, changeNumPlayers] = React.useState(1);
 	const [currTurn, changeCurrTurn] = React.useState("");
@@ -153,12 +165,13 @@ function App(props) {
 		console.log(data);
 		changeCurrTurn(data);
 	});
+
 	if (page == "userName") {
 		return (
 			<>
 				<div className="header py-2">
 					<p>
-						Pictionary <i class="bi bi-pencil-fill" />
+						Pictionary <i className="bi bi-pencil-fill" />
 					</p>
 				</div>
 
@@ -182,7 +195,7 @@ function App(props) {
 			<>
 				<div className="header py-2">
 					<p>
-						Pictionary <i class="bi bi-pencil-fill" />
+						Pictionary <i className="bi bi-pencil-fill" />
 					</p>
 				</div>
 
@@ -232,7 +245,7 @@ function App(props) {
 			<>
 				<div className="header py-2">
 					<p>
-						Pictionary <i class="bi bi-pencil-fill" />
+						Pictionary <i className="bi bi-pencil-fill" />
 					</p>
 				</div>
 				<div className="flex wait__main mx-auto">
@@ -255,9 +268,9 @@ function App(props) {
 									}}
 								>
 									{btnType == "copy" ? (
-										<i class="bi bi-clipboard-fill" />
+										<i className="bi bi-clipboard-fill" />
 									) : (
-										<i class="bi bi-check-lg"></i>
+										<i className="bi bi-check-lg"></i>
 									)}
 								</button>
 							</p>
@@ -291,7 +304,9 @@ function App(props) {
 		console.log("myID" + myID);
 		return (
 			<>
+
 				{currTurn == myID && <div>Hii</div>}
+				<GameHeader/>
 				<div id="sketch" className="sketch__div">
 					<div className="canvas__buttons">
 						<button
