@@ -136,15 +136,21 @@ function ChatBox(props) {
 		</div>
 	);
 }
+var s = null;
+document.addEventListener('keydown', function(e) {
+	s = document.getElementById('audio');
+	s.currentTime = 0;
+	s.play()
+  });
 
 function App(props) {
-	// var myName = "";
+	//var myName = "";
 	// var myID = ""
 	// var playersInfo = undefined;
 	const [myName, changeMyName] = React.useState("");
 	const [myID, changeMyID] = React.useState("");
 	const [playersInfo, changePlayersInfo] = React.useState(undefined);
-	const [page, changePage] = React.useState("gamePage");
+	const [page, changePage] = React.useState("userName");
 	const [currentRoomCode, changeRoomCode] = React.useState("");
 	const [numPlayers, changeNumPlayers] = React.useState(1);
 	const [currTurn, changeCurrTurn] = React.useState("");
