@@ -68,7 +68,6 @@
 
 .sketch__div{
     /* background-color: white; */
-    width: max-content;
     height: 50vh;
     display: flex;
     flex-direction: row;
@@ -81,6 +80,10 @@
     padding: 5px;
     display: flex;
     flex-direction: column;
+}
+
+.canvas__main{
+    width: 50vw;
 }
 
 .color__button{
@@ -124,8 +127,8 @@
 .chat__box{
     display: flex;
     flex-direction: column;
-    width: 20%;
     margin-left: 30px;
+    width: 20vw;
 }
 
 .messages{

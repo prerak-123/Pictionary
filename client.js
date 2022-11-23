@@ -13,19 +13,8 @@ document.body.onmouseup = function () {
 	--mouseDown;
 };
 
-function init() {
+function init(isMyTurn) {
 	var canvas = document.querySelector("#paint");
-
-	// fitToContainer(canvas);
-
-	// function fitToContainer(canvas){
-	// // Make it visually fill the positioned parent
-	// canvas.style.width ='100%';
-	// canvas.style.height='100%';
-	// // ...then set the internal size to match
-	// canvas.width  = canvas.offsetWidth;
-	// canvas.height = canvas.offsetHeight;
-	// }
 
 	if (canvas == null) {
 		return;
@@ -51,7 +40,7 @@ function init() {
 			mouse.y = e.pageY - this.offsetTop;
 
 			if (!mouseDown) {
-				canvas.removeEventListener("mousemove", onPaint, false);
+				canvas.removeEventListener("mousemove", sendCoordnates, false);
 			}
 		},
 		false
@@ -66,7 +55,7 @@ function init() {
 	canvas.addEventListener(
 		"mousedown",
 		function (e) {
-			canvas.addEventListener("mousemove", onPaint, false);
+			canvas.addEventListener("mousemove", sendCoordnates, false);
 		},
 		false
 	);
@@ -74,18 +63,31 @@ function init() {
 	canvas.addEventListener(
 		"mouseup",
 		function () {
-			canvas.removeEventListener("mousemove", onPaint, false);
+			canvas.removeEventListener("mousemove", sendCoordnates, false);
 		},
 		false
 	);
 
-	var onPaint = function () {
+	var onPaint = function (data) {
 		ctx.beginPath();
-		ctx.moveTo(last_mouse.x, last_mouse.y);
-		ctx.lineTo(mouse.x, mouse.y);
+		ctx.moveTo(data[0][0] * canvas.width, data[0][1] * canvas.height);
+		ctx.lineTo(data[1][0] * canvas.width, data[1][1] * canvas.height);
 		ctx.closePath();
 		ctx.stroke();
 	};
+
+	var sendCoordnates = function () {
+		if (isMyTurn) {
+			socket.emit("mouseCoordinates", [
+				[last_mouse.x / canvas.width, last_mouse.y / canvas.height],
+				[mouse.x / canvas.width, mouse.y / canvas.height],
+			]);
+		}
+	};
+
+	socket.on("serverMouseCoordinates", (data) => {
+		onPaint(data);
+	});
 }
 //----------------------------
 
@@ -137,11 +139,11 @@ function ChatBox(props) {
 	);
 }
 var s = null;
-document.addEventListener('keydown', function(e) {
-	s = document.getElementById('audio');
+document.addEventListener("keydown", function (e) {
+	s = document.getElementById("audio");
 	s.currentTime = 0;
-	s.play()
-  });
+	s.play();
+});
 
 function App(props) {
 	//var myName = "";
@@ -162,7 +164,7 @@ function App(props) {
 	});
 
 	React.useEffect(() => {
-		init();
+		init(currTurn == myID);
 	});
 
 	function userName(e) {
@@ -193,7 +195,6 @@ function App(props) {
 	});
 
 	socket.on("playersInfo", (data) => {
-		console.log(data);
 		changeNumPlayers(data.length);
 		changePlayersInfo(data);
 	});
@@ -356,103 +357,105 @@ function App(props) {
 						Pictionary <i className="bi bi-pencil-fill" />
 					</p>
 				</div>
-				{currTurn == myID && <div>Hii</div>}
-				<div id="sketch" className="sketch__div">
-					<div className="canvas__buttons">
-						<button
-							className="btn color__button my-1"
-							style={{ backgroundColor: "black" }}
-							onClick={() => {
-								var canvas = document.querySelector("#paint");
-								if (canvas == null) {
-									return;
-								}
-								var ctx = canvas.getContext("2d");
-								ctx.strokeStyle = "black";
-								ctx.lineWidth = 5;
-							}}
-						/>
+				<div className="sketch__div">
+					{currTurn == myID && (
+						<div className="canvas__buttons">
+							<button
+								className="btn color__button my-1"
+								style={{ backgroundColor: "black" }}
+								onClick={() => {
+									var canvas = document.querySelector("#paint");
+									if (canvas == null) {
+										return;
+									}
+									var ctx = canvas.getContext("2d");
+									ctx.strokeStyle = "black";
+									ctx.lineWidth = 5;
+								}}
+							/>
 
-						<button
-							className="btn color__button my-1"
-							style={{ backgroundColor: "brown" }}
-							onClick={() => {
-								var canvas = document.querySelector("#paint");
-								if (canvas == null) {
-									return;
-								}
-								var ctx = canvas.getContext("2d");
-								ctx.strokeStyle = "brown";
-								ctx.lineWidth = 5;
-							}}
-						/>
+							<button
+								className="btn color__button my-1"
+								style={{ backgroundColor: "brown" }}
+								onClick={() => {
+									var canvas = document.querySelector("#paint");
+									if (canvas == null) {
+										return;
+									}
+									var ctx = canvas.getContext("2d");
+									ctx.strokeStyle = "brown";
+									ctx.lineWidth = 5;
+								}}
+							/>
 
-						<button
-							className="btn color__button my-1"
-							style={{ backgroundColor: "red" }}
-							onClick={() => {
-								var canvas = document.querySelector("#paint");
-								if (canvas == null) {
-									return;
-								}
-								var ctx = canvas.getContext("2d");
-								ctx.strokeStyle = "red";
-								ctx.lineWidth = 5;
-							}}
-						/>
+							<button
+								className="btn color__button my-1"
+								style={{ backgroundColor: "red" }}
+								onClick={() => {
+									var canvas = document.querySelector("#paint");
+									if (canvas == null) {
+										return;
+									}
+									var ctx = canvas.getContext("2d");
+									ctx.strokeStyle = "red";
+									ctx.lineWidth = 5;
+								}}
+							/>
 
-						<button
-							className="btn color__button my-1"
-							style={{ backgroundColor: "blue" }}
-							onClick={() => {
-								var canvas = document.querySelector("#paint");
-								if (canvas == null) {
-									return;
-								}
-								var ctx = canvas.getContext("2d");
-								ctx.strokeStyle = "blue";
-								ctx.lineWidth = 5;
-							}}
-						/>
+							<button
+								className="btn color__button my-1"
+								style={{ backgroundColor: "blue" }}
+								onClick={() => {
+									var canvas = document.querySelector("#paint");
+									if (canvas == null) {
+										return;
+									}
+									var ctx = canvas.getContext("2d");
+									ctx.strokeStyle = "blue";
+									ctx.lineWidth = 5;
+								}}
+							/>
 
-						<button
-							className="btn color__button my-1"
-							style={{ backgroundColor: "yellow" }}
-							onClick={() => {
-								var canvas = document.querySelector("#paint");
-								if (canvas == null) {
-									return;
-								}
-								var ctx = canvas.getContext("2d");
-								ctx.strokeStyle = "yellow";
-								ctx.lineWidth = 5;
-							}}
-						/>
+							<button
+								className="btn color__button my-1"
+								style={{ backgroundColor: "yellow" }}
+								onClick={() => {
+									var canvas = document.querySelector("#paint");
+									if (canvas == null) {
+										return;
+									}
+									var ctx = canvas.getContext("2d");
+									ctx.strokeStyle = "yellow";
+									ctx.lineWidth = 5;
+								}}
+							/>
 
-						<button
-							className="btn color__button my-1 btn-dark"
-							onClick={() => {
-								var canvas = document.querySelector("#paint");
-								if (canvas == null) {
-									return;
-								}
-								var ctx = canvas.getContext("2d");
-								ctx.strokeStyle = "white";
-								ctx.lineWidth = 30;
-							}}
-						>
-							<h5>
-								<i className="bi bi-eraser-fill"></i>
-							</h5>
-						</button>
-					</div>
-					<div className="canvas__div">
+							<button
+								className="btn color__button my-1 btn-dark"
+								onClick={() => {
+									var canvas = document.querySelector("#paint");
+									if (canvas == null) {
+										return;
+									}
+									var ctx = canvas.getContext("2d");
+									ctx.strokeStyle = "white";
+									ctx.lineWidth = 30;
+								}}
+							>
+								<h5>
+									<i className="bi bi-eraser-fill"></i>
+								</h5>
+							</button>
+						</div>
+					)}
+					<div id="sketch" className="canvas__main">
 						<canvas id="paint" className="paint__canvas"></canvas>
 					</div>
 					<div className="chat__box">
+						{currTurn == myID ? "My Turn" : "Rishit"}
 						<ChatBox />
-						<form>
-							<input placeholder="Guess"/>
+						<form className="mx-auto">
+							<input placeholder="Guess" className="my-2" />
 						</form>
 					</div>
 				</div>

@@ -108,6 +108,9 @@ io.on("connection", (socket) => {
 		gameLoop(users[socket.id]["room"]);
 	})
 
+	socket.on("mouseCoordinates", (data) => {
+		io.to(users[socket.id]["room"]).emit("serverMouseCoordinates", data);
+	})
 	socket.on("disconnect", ()=>{
 		console.log("Bye");
 		userRoomCode = users[socket.id]["room"];
@@ -145,7 +148,7 @@ io.on("connection", (socket) => {
 			}
 			time = time - 1;
 			if(time < 0){
-				time = 0;
+				time = 60;
 				currTurn = (currTurn + 1) % roomCodes[roomCode].length; 
 				io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 			}
