@@ -134,7 +134,7 @@ io.on("connection", (socket) => {
 	})
 
 	function gameLoop(roomCode){
-		let time = 0;
+		let time = 60;
 		let currTurn = 0;
 		io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 
@@ -143,8 +143,8 @@ io.on("connection", (socket) => {
 				clearInterval(gameInterval);
 				return;
 			}
-			time = time + 1;
-			if(time > 60){
+			time = time - 1;
+			if(time < 0){
 				time = 0;
 				currTurn = (currTurn + 1) % roomCodes[roomCode].length; 
 				io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);

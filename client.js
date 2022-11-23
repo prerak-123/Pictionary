@@ -1,4 +1,5 @@
 "use strict";
+
 const socket = io("http://localhost:3000");
 
 //Canvas
@@ -14,6 +15,18 @@ document.body.onmouseup = function () {
 
 function init() {
 	var canvas = document.querySelector("#paint");
+
+	// fitToContainer(canvas);
+
+	// function fitToContainer(canvas){
+	// // Make it visually fill the positioned parent
+	// canvas.style.width ='100%';
+	// canvas.style.height='100%';
+	// // ...then set the internal size to match
+	// canvas.width  = canvas.offsetWidth;
+	// canvas.height = canvas.offsetHeight;
+	// }
+
 	if (canvas == null) {
 		return;
 	}
@@ -90,16 +103,38 @@ function makeRoom(e) {
 	socket.emit("makeRoom", "");
 }
 
-function GameHeader(props){
-	const [gameTime, changeGameTime] = React.useState(0);
+function GameHeader(props) {
+	const [gameTime, changeGameTime] = React.useState(60);
 
 	socket.on("gameTime", (data) => {
 		changeGameTime(data);
-	})
+	});
 
-	return(
-		<div className="game__header">{gameTime}</div>
-	)
+	return (
+		<div className="game__header">
+			<div>Time Remaining: {gameTime}</div>
+			<div>{props.roomCode}</div>
+			<div>Round: 1/2</div>
+		</div>
+	);
+}
+
+function ChatBox(props) {
+	const [messages, changeMessages] = React.useState([
+		["Prerak", "Flag"],
+		["Prerak", "Flag"],
+		["Yash", "Rectangle"],
+	]);
+
+	return (
+		<div className="messages">
+			{messages.map((elem, index) => (
+				<div key={index} className="user__message">
+					{elem[0]}: {elem[1]}
+				</div>
+			))}
+		</div>
+	);
 }
 
 function App(props) {
@@ -291,7 +326,12 @@ function App(props) {
 							</button>
 						</div>
 						<div>
-							{playersInfo != undefined && playersInfo.map((name, index) => <div className="mx-5" key={index}>{index + 1}. {name[1]} {name[0] == myID && "(Me)"}</div>)}
+							{playersInfo != undefined &&
+								playersInfo.map((name, index) => (
+									<div className="mx-5" key={index}>
+										{index + 1}. {name[1]} {name[0] == myID && "(Me)"}
+									</div>
+								))}
 						</div>
 					</div>
 				</div>
@@ -304,9 +344,13 @@ function App(props) {
 		console.log("myID" + myID);
 		return (
 			<>
-
+				<GameHeader roomCode={currentRoomCode} />
+				<div className="header py-2">
+					<p>
+						Pictionary <i className="bi bi-pencil-fill" />
+					</p>
+				</div>
 				{currTurn == myID && <div>Hii</div>}
-				<GameHeader/>
 				<div id="sketch" className="sketch__div">
 					<div className="canvas__buttons">
 						<button
@@ -396,7 +440,15 @@ function App(props) {
 							</h5>
 						</button>
 					</div>
-					<canvas id="paint" className="paint__canvas"></canvas>
+					<div className="canvas__div">
+						<canvas id="paint" className="paint__canvas"></canvas>
+					</div>
+					<div className="chat__box">
+						<ChatBox />
+						<form>
+							<input placeholder="Guess"/>
+						</form>
+					</div>
 				</div>
 			</>
 		);
