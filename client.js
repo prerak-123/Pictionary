@@ -100,20 +100,21 @@ function App(props) {
 	const [currentRoomCode, changeRoomCode] = React.useState("");
 	const [numPlayers, changeNumPlayers] = React.useState(1);
 	const [currTurn, changeCurrTurn] = React.useState("");
+	const [btnType, changeBtnType] = React.useState("copy");
 
 	socket.on("userID", (data) => {
 		changeMyID(data);
 		console.log(myID);
-	})
+	});
 
 	React.useEffect(() => {
 		init();
 	});
 
-	function userName(e){
+	function userName(e) {
 		e.preventDefault();
 		var inputRoomCode = document.getElementById("userNameInput").value;
-		if(inputRoomCode.length == 0){
+		if (inputRoomCode.length == 0) {
 			alert("Enter a name!");
 			return;
 		}
@@ -143,90 +144,130 @@ function App(props) {
 		changePlayersInfo(data);
 	});
 
-	socket.on("serverStartGame", (data)=>{
+	socket.on("serverStartGame", (data) => {
 		changePage("gamePage");
-	})
+	});
 
 	socket.on("currTurn", (data) => {
 		console.log(data);
 		changeCurrTurn(data);
-	})
-	if(page=="userName"){
-		return(
-			<div className="main__user__name">
-				<form onSubmit={userName}>
+	});
+	if (page == "userName") {
+		return (
+			<>
+				<div className="header py-2">
+					<p>
+						Pictionary <i class="bi bi-pencil-fill" />
+					</p>
+				</div>
 
-					<h1>Enter Name</h1>
-					<input
-						type="text"
-						className="form-control w-75 mx-auto"
-						placeholder="Name"
-						id="userNameInput"
-					/>
-				</form>
-			</div>
-		)
+				<div className="main__user__name">
+					<form onSubmit={userName}>
+						<h2>Enter Name</h2>
+						<input
+							type="text"
+							className="form-control w-75 mx-auto"
+							placeholder="Name"
+							id="userNameInput"
+						/>
+					</form>
+				</div>
+			</>
+		);
 	}
 
 	if (page == "roomButtons") {
 		return (
-			<div className="main__buttons">
-				<button
-					id="make_room"
-					type="button"
-					onClick={makeRoom}
-					className="btn btn-lg btn-primary m-4"
-				>
-					{" "}
-					<i className="bi bi-plus-circle-fill mr-2" /> Make Room
-				</button>
+			<>
+				<div className="header py-2">
+					<p>
+						Pictionary <i class="bi bi-pencil-fill" />
+					</p>
+				</div>
 
-				<hr className="hruler" />
+				<div className="mx-auto char__show">
+					<div className="my-auto px-5">
+						<img src="images/char.png" className="char__img" />
+						<p>{myName}</p>
+					</div>
 
-				<form onSubmit={joinRoom}>
-					<input
-						type="text"
-						className="form-control w-75 mx-auto"
-						placeholder="Room Code"
-						id="roomCodeInput"
-					/>
-				</form>
-				<button
-					id="join_room"
-					type="button"
-					className="btn btn-lg btn-primary m-4"
-					onClick={joinRoom}
-				>
-					{" "}
-					<i className="bi bi-box-arrow-in-right mr-2" /> Join Room
-				</button>
-			</div>
+					<div className="main__buttons">
+						<button
+							id="make_room"
+							type="button"
+							onClick={makeRoom}
+							className="btn btn-lg btn-warning m-4"
+						>
+							{" "}
+							<i className="bi bi-plus-circle-fill mr-2" /> Make Room
+						</button>
+
+						<hr className="hruler" />
+
+						<form onSubmit={joinRoom}>
+							<input
+								type="text"
+								className="form-control w-75 mx-auto"
+								placeholder="Room Code"
+								id="roomCodeInput"
+							/>
+						</form>
+						<button
+							id="join_room"
+							type="button"
+							className="btn btn-lg btn-warning m-4"
+							onClick={joinRoom}
+						>
+							{" "}
+							<i className="bi bi-box-arrow-in-right mr-2" /> Join Room
+						</button>
+					</div>
+				</div>
+			</>
 		);
 	}
 
 	if (page == "waitPlayers") {
 		return (
-			<div className="flex wait__main">
-				<div className="wait__players">
-					<div>
-						<img src="images/hourglass.gif" className="mx-5" />
-					</div>
-					<div>
-						<p>Waiting For Players</p>
-						<p>Room Code: {currentRoomCode}</p>
-						<h1>
-							<i className="bi bi-person" size={14}></i> {numPlayers}
-						</h1>
-						<button className="btn btn-lg btn-warning m-4" onClick={(e)=>{
-							if(numPlayers <= 1){
-								alert("Need atleast two players to start the game!");
-								return;
-							}
-							socket.emit("startGame", "");
-						}}>Start Game</button>
+			<>
+				<div className="header py-2">
+					<p>
+						Pictionary <i class="bi bi-pencil-fill" />
+					</p>
+				</div>
+
+				<div className="flex wait__main mx-auto">
+					<div className="wait__players">
+						<div>
+							<img src="images/hourglass.gif" className="mx-5" />
+						</div>
+						<div>
+							<p>Waiting For Players</p>
+							<p>Room Code: {currentRoomCode} <button className="btn btn-dark" onClick={(e)=> {
+								 navigator.clipboard.writeText(currentRoomCode);
+								 changeBtnType("tick");
+								 setTimeout(() => {changeBtnType("copy")}, 5000);
+
+							}}>{ btnType == "copy" ? <i class="bi bi-clipboard-fill"/> : <i class="bi bi-check-lg"></i>}</button></p>
+							<h1>
+								<i className="bi bi-person" size={14}></i> {numPlayers}
+							</h1>
+							<button
+								className="btn btn-lg btn-success m-4"
+								onClick={(e) => {
+									if (numPlayers <= 1) {
+										alert("Need atleast two players to start the game!");
+										return;
+									}
+									socket.emit("startGame", "");
+								}}
+							>
+								Start Game
+							</button>
+						</div>
 					</div>
 				</div>
-			</div>
+			</>
 		);
 	}
 
@@ -320,7 +361,9 @@ function App(props) {
 								ctx.lineWidth = 30;
 							}}
 						>
-							<h5><i className="bi bi-eraser-fill"></i></h5>
+							<h5>
+								<i className="bi bi-eraser-fill"></i>
+							</h5>
 						</button>
 					</div>
 					<canvas id="paint" className="paint__canvas"></canvas>
