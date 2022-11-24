@@ -222,7 +222,7 @@ io.on("connection", (socket) => {
 	function gameLoop(roomCode) {
 		let round = 1;
 		const MAX_ROUNDS = 3;
-		const MAX_TIME = 100000000000;
+		const MAX_TIME = 60;
 		let time = MAX_TIME;
 		let currTurn = 0;
 
@@ -243,6 +243,8 @@ io.on("connection", (socket) => {
 			time = time - 1;
 			if (time < 0) {
 				io.to(roomCode).emit("currTurn", "X");
+
+				io.to(roomCode).emit("roundchangesound", "audioround");
 
 				io.to(roomCode).emit("nextTurn", "");
 
