@@ -129,6 +129,7 @@
     flex-direction: column;
     margin-left: 30px;
     width: 20vw;
+    
 }
 
 .messages{
@@ -190,3 +191,17 @@
     text-decoration: none;
     cursor: pointer;
   } 
+  table {
+    border: 2px solid forestgreen;
+    width: 300px;
+    height: 25px;
+    font-family: fantasy;
+    font-size: 25px;
+  }
+    
+  th, td {
+    padding: 5px;
+    text-align: left;
+  }
+    
+  

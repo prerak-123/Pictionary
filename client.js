@@ -135,6 +135,36 @@ function GameHeader(props) {
 	);
 }
 
+function Scorecard(props){
+	return (
+		<div>
+			<table>
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Score</th>
+							</tr>
+						</thead>
+						<tbody>
+			{props.score.map((score, index) => (
+				
+					
+						<tr>
+							<td>{score[0]}</td>
+							{/* <td width="300px"></td> */}
+							<td>{score[1]}</td>
+						</tr>
+					
+					
+				
+				
+			))}
+			</tbody>
+			</table>
+		</div>
+		);
+}
+
 function ChatBox(props) {
 	const [messages, changeMessages] = React.useState([
 		["Prerak", "Flag"],
@@ -439,7 +469,7 @@ function App(props) {
 					</div>
 					<div className="chat__box">
 						{currTurn == myID ? "My Turn" : "Rishit"}
-						<ChatBox />
+						<Scorecard score={[["Rishit",10],["Yash",20]]} />
 						<form className="mx-auto">
 							<input placeholder="Guess" className="my-2" />
 						</form>
