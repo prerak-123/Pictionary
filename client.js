@@ -139,6 +139,10 @@ function ChatBox(props) {
 	socket.on("displayMessage", (data) => {
 		changeMessages([...messages, data]);
 	})
+
+	socket.on("nextTurn", () => {
+		changeMessages([]);
+	})
 	return (
 		<div className="messages">
 			{messages.slice(0).reverse().map((elem, index) => (
@@ -172,6 +176,7 @@ function App(props) {
 	const [currTurn, changeCurrTurn] = React.useState("");
 	const [btnType, changeBtnType] = React.useState("copy");
 	const [currWord, changecurrWord] = React.useState("");
+	const [guessedWord, changeGuessedWord] = React.useState(false);
 
 	socket.on("userID", (data) => {
 		changeMyID(data);
@@ -230,7 +235,12 @@ function App(props) {
 
 	socket.on("nextTurn", (data) => {
 		changecurrWord("");
+		changeGuessedWord(false);
 	});
+
+	socket.on("correctGuess", (data) => {
+		changeGuessedWord(true);
+	})
 
 	if (page == "userName") {
 		return (
@@ -454,7 +464,7 @@ function App(props) {
 					<div className="chat__box">
 						{currTurn == myID ? "My Turn" : "Rishit"}
 						<ChatBox/>
-						{myID != currTurn && <form className="mx-auto" onSubmit={(e) =>{
+						{(myID != currTurn && !guessedWord) && <form className="mx-auto" onSubmit={(e) =>{
 							e.preventDefault();
 							let guess = document.getElementById("guess").value;
 							console.log(guess);
