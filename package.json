@@ -28,5 +28,9 @@
     "react": "^18.2.0",
     "react-bootstrap": "^2.6.0",
     "socket.io": "^4.5.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.2",
+    "babelify": "^10.0.0"
   }
 }

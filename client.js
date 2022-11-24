@@ -13,12 +13,14 @@ document.body.onmouseup = function () {
 	--mouseDown;
 };
 
-function init(isMyTurn) {
+function init() {
+
 	var canvas = document.querySelector("#paint");
 
 	if (canvas == null) {
 		return;
 	}
+
 	var ctx = canvas.getContext("2d");
 
 	var sketch = document.querySelector("#sketch");
@@ -30,21 +32,23 @@ function init(isMyTurn) {
 	var last_mouse = { x: 0, y: 0 };
 
 	/* Mouse Capturing Work */
-	canvas.addEventListener(
-		"mousemove",
-		function (e) {
-			last_mouse.x = mouse.x;
-			last_mouse.y = mouse.y;
+	
+		canvas.addEventListener(
+			"mousemove",
+			function (e) {
+				last_mouse.x = mouse.x;
+				last_mouse.y = mouse.y;
 
-			mouse.x = e.pageX - this.offsetLeft;
-			mouse.y = e.pageY - this.offsetTop;
+				mouse.x = e.pageX - this.offsetLeft;
+				mouse.y = e.pageY - this.offsetTop;
 
-			if (!mouseDown) {
-				canvas.removeEventListener("mousemove", sendCoordnates, false);
-			}
-		},
-		false
-	);
+				if (!mouseDown) {
+					canvas.removeEventListener("mousemove", sendCoordinates, false);
+				}
+			},
+			false
+		);
+	
 
 	/* Drawing on Paint App */
 	ctx.lineWidth = 5;
@@ -52,21 +56,25 @@ function init(isMyTurn) {
 	ctx.lineCap = "round";
 	ctx.strokeStyle = "black";
 
-	canvas.addEventListener(
-		"mousedown",
-		function (e) {
-			canvas.addEventListener("mousemove", sendCoordnates, false);
-		},
-		false
-	);
+	
+		canvas.addEventListener(
+			"mousedown",
+			function (e) {
+				canvas.addEventListener("mousemove", sendCoordinates, false);
+			},
+			false
+		);
+	
 
-	canvas.addEventListener(
-		"mouseup",
-		function () {
-			canvas.removeEventListener("mousemove", sendCoordnates, false);
-		},
-		false
-	);
+	
+		canvas.addEventListener(
+			"mouseup",
+			function () {
+				canvas.removeEventListener("mousemove", sendCoordinates, false);
+			},
+			false
+		);
+	
 
 	var onPaint = function (data) {
 		ctx.beginPath();
@@ -76,8 +84,8 @@ function init(isMyTurn) {
 		ctx.stroke();
 	};
 
-	var sendCoordnates = function () {
-		if (isMyTurn) {
+	var sendCoordinates = function () {
+		if (window.isMyTurn) {
 			socket.emit("mouseCoordinates", [
 				[last_mouse.x / canvas.width, last_mouse.y / canvas.height],
 				[mouse.x / canvas.width, mouse.y / canvas.height],
@@ -87,6 +95,11 @@ function init(isMyTurn) {
 
 	socket.on("serverMouseCoordinates", (data) => {
 		onPaint(data);
+	});
+
+	socket.on("serverChangeColor", (data) => {
+		ctx.strokeStyle = data;
+		data == "white" ? (ctx.lineWidth = 30) : (ctx.lineWidth = 5);
 	});
 }
 //----------------------------
@@ -164,7 +177,8 @@ function App(props) {
 	});
 
 	React.useEffect(() => {
-		init(currTurn == myID);
+		window.isMyTurn = currTurn == myID;
+		init();
 	});
 
 	function userName(e) {
@@ -364,13 +378,7 @@ function App(props) {
 								className="btn color__button my-1"
 								style={{ backgroundColor: "black" }}
 								onClick={() => {
-									var canvas = document.querySelector("#paint");
-									if (canvas == null) {
-										return;
-									}
-									var ctx = canvas.getContext("2d");
-									ctx.strokeStyle = "black";
-									ctx.lineWidth = 5;
+									socket.emit("changeColor", "black");
 								}}
 							/>
 
@@ -378,13 +386,7 @@ function App(props) {
 								className="btn color__button my-1"
 								style={{ backgroundColor: "brown" }}
 								onClick={() => {
-									var canvas = document.querySelector("#paint");
-									if (canvas == null) {
-										return;
-									}
-									var ctx = canvas.getContext("2d");
-									ctx.strokeStyle = "brown";
-									ctx.lineWidth = 5;
+									socket.emit("changeColor", "brown");
 								}}
 							/>
 
@@ -392,13 +394,7 @@ function App(props) {
 								className="btn color__button my-1"
 								style={{ backgroundColor: "red" }}
 								onClick={() => {
-									var canvas = document.querySelector("#paint");
-									if (canvas == null) {
-										return;
-									}
-									var ctx = canvas.getContext("2d");
-									ctx.strokeStyle = "red";
-									ctx.lineWidth = 5;
+									socket.emit("changeColor", "red");
 								}}
 							/>
 
@@ -406,13 +402,7 @@ function App(props) {
 								className="btn color__button my-1"
 								style={{ backgroundColor: "blue" }}
 								onClick={() => {
-									var canvas = document.querySelector("#paint");
-									if (canvas == null) {
-										return;
-									}
-									var ctx = canvas.getContext("2d");
-									ctx.strokeStyle = "blue";
-									ctx.lineWidth = 5;
+									socket.emit("changeColor", "blue");
 								}}
 							/>
 
@@ -420,26 +410,14 @@ function App(props) {
 								className="btn color__button my-1"
 								style={{ backgroundColor: "yellow" }}
 								onClick={() => {
-									var canvas = document.querySelector("#paint");
-									if (canvas == null) {
-										return;
-									}
-									var ctx = canvas.getContext("2d");
-									ctx.strokeStyle = "yellow";
-									ctx.lineWidth = 5;
+									socket.emit("changeColor", "yellow");
 								}}
 							/>
 
 							<button
 								className="btn color__button my-1 btn-dark"
 								onClick={() => {
-									var canvas = document.querySelector("#paint");
-									if (canvas == null) {
-										return;
-									}
-									var ctx = canvas.getContext("2d");
-									ctx.strokeStyle = "white";
-									ctx.lineWidth = 30;
+									socket.emit("changeColor", "white");
 								}}
 							>
 								<h5>
