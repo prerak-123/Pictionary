@@ -74,6 +74,7 @@ const words = [
 const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 var roomCodes = {};
 var users = {};
+var gamesInfo = {};
 
 function generateString(length) {
 	let result = "";
@@ -171,6 +172,17 @@ io.on("connection", (socket) => {
 		}
 
 		io.to(users[socket.id]["room"]).emit("serverStartGame", true);
+		const playersScoreArr = roomCodes[users[socket.id]["room"]].map((elem, index) => {
+			return [elem, 0];
+		});
+
+		console.log(playersScoreArr);
+
+		gamesInfo[users[socket.id]["room"]] = {
+			currWord: "",
+			playersScore : playersScoreArr
+		}
+
 		gameLoop(users[socket.id]["room"]);
 	});
 
@@ -181,6 +193,20 @@ io.on("connection", (socket) => {
 	socket.on("changeColor", (data) => {
 		io.to(users[socket.id]["room"]).emit("serverChangeColor", data);
 	});
+
+	socket.on("guess", (data, id) => {
+		console.log(data);
+		if(data != gamesInfo[users[socket.id]["room"]]["currWord"]){
+			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], data, "white"]);
+			io.to(id).emit("playsound", "audiowrong");
+		}
+
+		else{
+			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], "Guessed Correctly!", "yellow"]);
+			io.to(id).emit("playsound", "audioright");
+			socket.emit("correctGuess", "");
+		}
+	})
 
 	socket.on("disconnect", () => {
 		console.log("Bye");
@@ -210,27 +236,41 @@ io.on("connection", (socket) => {
 	function gameLoop(roomCode) {
 		let round = 1;
 		const MAX_ROUNDS = 3;
-		const MAX_TIME = 60;
+		const MAX_TIME = 20;
 		let time = MAX_TIME;
 		let currTurn = 0;
 
-		let randomWord = generateWord();
+		gamesInfo[roomCode]["currWord"] = generateWord();
+
+		
 
 		io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 
-		io.to(roomCodes[roomCode][currTurn]).emit("serverWord", randomWord);
+		io.to(roomCodes[roomCode][currTurn]).emit("serverWord", gamesInfo[roomCode]["currWord"]);
 
 		let gameInterval = setInterval(() => {
 			if (!(roomCode in roomCodes)) {
 				clearInterval(gameInterval);
+				delete gamesInfo[roomCode];
 				return;
 			}
 			
 			time = time - 1;
 			if (time < 0) {
+				io.to(roomCode).emit("displayMessage", ["irrelevant", gamesInfo[roomCode]["currWord"], "pink"]);
+				io.to(roomCode).emit("playsound", "audioround");
+				io.to(roomCode).emit("currTurn", "X");
+
 				io.to(roomCode).emit("nextTurn", "");
 
-				randomWord = generateWord();
+
+				var start = new Date().getTime();
+				var end = start;
+				while(end < start + 5000) {
+					end = new Date().getTime();
+				}
+
+				gamesInfo[roomCode]["currWord"] = generateWord();
 
 				time = MAX_TIME;
 				currTurn = (currTurn + 1) % roomCodes[roomCode].length;
@@ -248,7 +288,7 @@ io.on("connection", (socket) => {
 					}
 
 				}
-				io.to(roomCodes[roomCode][currTurn]).emit("serverWord", randomWord);
+				io.to(roomCodes[roomCode][currTurn]).emit("serverWord", gamesInfo[roomCode]["currWord"]);
 				io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 			}
 
