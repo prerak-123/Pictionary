@@ -178,7 +178,7 @@ function ChatBox(props) {
 			{messages.slice(0).reverse().map((elem, index) => (
 				<div key={index} className="user__message" style={{ color: elem[2] }}>
 					{elem[2] == "white" && elem[0] + ": " + elem[1]}
-					{elem[2] == "yellow" && elem[0] + elem[1]}
+					{elem[2] == "yellow" && elem[0] + " " + elem[1]}
 					{elem[2] == "pink" && "Correct Word: " + elem[1]}
 
 				</div>
