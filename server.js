@@ -85,22 +85,10 @@ function generateString(length) {
 	return result;
 }
 
-function generateWords(){
-	let ind1 = undefined;
-	let ind2 = undefined;
-	let ind3 = undefined;
+function generateWord(){
+	let ind1 = Math.floor(Math.random() * words.length);
 
-	ind1 = Math.floor(Math.random() * words.length);
-
-	do{
-		ind2 = Math.floor(Math.random() * words.length);
-	}while(ind2 == ind1)
-
-	do{
-		ind3 = Math.floor(Math.random() * words.length);
-	}while(ind3 == ind1 || ind3 == ind2);
-
-	return([words[ind1], words[ind2], words[ind3]]);
+	return(words[ind1]);
 }
 
 io.on("connection", (socket) => {
@@ -220,30 +208,47 @@ io.on("connection", (socket) => {
 	});
 
 	function gameLoop(roomCode) {
-		const MAX_TIME = 20;
+		let round = 1;
+		const MAX_ROUNDS = 3;
+		const MAX_TIME = 60;
 		let time = MAX_TIME;
 		let currTurn = 0;
 
-		let wordIndex = 0;
-
-		let randomWords = generateWords();
-		console.log(randomWords);
+		let randomWord = generateWord();
 
 		io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
+
+		io.to(roomCodes[roomCode][currTurn]).emit("serverWord", randomWord);
 
 		let gameInterval = setInterval(() => {
 			if (!(roomCode in roomCodes)) {
 				clearInterval(gameInterval);
 				return;
 			}
+			
 			time = time - 1;
 			if (time < 0) {
+				io.to(roomCode).emit("nextTurn", "");
 
-				randomWords = generateWords();
-				wordIndex = 0;
-				console.log(randomWords);
+				randomWord = generateWord();
+
 				time = MAX_TIME;
 				currTurn = (currTurn + 1) % roomCodes[roomCode].length;
+				if(currTurn == 0){
+
+					round = round + 1;
+					if(round <= MAX_ROUNDS){
+						io.to(roomCode).emit("gameRound", round);
+					}
+
+					else{
+						io.to(roomCode).emit("gameOver", "");
+						clearInterval(gameInterval);
+						return;
+					}
+
+				}
+				io.to(roomCodes[roomCode][currTurn]).emit("serverWord", randomWord);
 				io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 			}
 

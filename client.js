@@ -14,7 +14,6 @@ document.body.onmouseup = function () {
 };
 
 function init() {
-
 	var canvas = document.querySelector("#paint");
 
 	if (canvas == null) {
@@ -32,23 +31,22 @@ function init() {
 	var last_mouse = { x: 0, y: 0 };
 
 	/* Mouse Capturing Work */
-	
-		canvas.addEventListener(
-			"mousemove",
-			function (e) {
-				last_mouse.x = mouse.x;
-				last_mouse.y = mouse.y;
 
-				mouse.x = e.pageX - this.offsetLeft;
-				mouse.y = e.pageY - this.offsetTop;
+	canvas.addEventListener(
+		"mousemove",
+		function (e) {
+			last_mouse.x = mouse.x;
+			last_mouse.y = mouse.y;
 
-				if (!mouseDown) {
-					canvas.removeEventListener("mousemove", sendCoordinates, false);
-				}
-			},
-			false
-		);
-	
+			mouse.x = e.pageX - this.offsetLeft;
+			mouse.y = e.pageY - this.offsetTop;
+
+			if (!mouseDown) {
+				canvas.removeEventListener("mousemove", sendCoordinates, false);
+			}
+		},
+		false
+	);
 
 	/* Drawing on Paint App */
 	ctx.lineWidth = 5;
@@ -56,25 +54,21 @@ function init() {
 	ctx.lineCap = "round";
 	ctx.strokeStyle = "black";
 
-	
-		canvas.addEventListener(
-			"mousedown",
-			function (e) {
-				canvas.addEventListener("mousemove", sendCoordinates, false);
-			},
-			false
-		);
-	
+	canvas.addEventListener(
+		"mousedown",
+		function (e) {
+			canvas.addEventListener("mousemove", sendCoordinates, false);
+		},
+		false
+	);
 
-	
-		canvas.addEventListener(
-			"mouseup",
-			function () {
-				canvas.removeEventListener("mousemove", sendCoordinates, false);
-			},
-			false
-		);
-	
+	canvas.addEventListener(
+		"mouseup",
+		function () {
+			canvas.removeEventListener("mousemove", sendCoordinates, false);
+		},
+		false
+	);
 
 	var onPaint = function (data) {
 		ctx.beginPath();
@@ -120,16 +114,21 @@ function makeRoom(e) {
 
 function GameHeader(props) {
 	const [gameTime, changeGameTime] = React.useState(60);
+	const [gameRound, changeGameRound] = React.useState(1);
 
 	socket.on("gameTime", (data) => {
 		changeGameTime(data);
+	});
+
+	socket.on("gameRound", (data) => {
+		changeGameRound(data);
 	});
 
 	return (
 		<div className="game__header">
 			<div>Time Remaining: {gameTime}</div>
 			<div>{props.roomCode}</div>
-			<div>Round: 1/2</div>
+			<div>Round: {gameRound}/3</div>
 		</div>
 	);
 }
@@ -159,9 +158,6 @@ document.addEventListener("keydown", function (e) {
 });
 
 function App(props) {
-	//var myName = "";
-	// var myID = ""
-	// var playersInfo = undefined;
 	const [myName, changeMyName] = React.useState("");
 	const [myID, changeMyID] = React.useState("");
 	const [playersInfo, changePlayersInfo] = React.useState(undefined);
@@ -170,6 +166,7 @@ function App(props) {
 	const [numPlayers, changeNumPlayers] = React.useState(1);
 	const [currTurn, changeCurrTurn] = React.useState("");
 	const [btnType, changeBtnType] = React.useState("copy");
+	const [currWord, changecurrWord] = React.useState("");
 
 	socket.on("userID", (data) => {
 		changeMyID(data);
@@ -221,6 +218,14 @@ function App(props) {
 		console.log(data);
 		changeCurrTurn(data);
 	});
+
+	socket.on("serverWord", (data) => {
+		changecurrWord(data);
+	})
+
+	socket.on("nextTurn", (data) =>{
+		changecurrWord("");
+	})
 
 	if (page == "userName") {
 		return (
@@ -362,9 +367,10 @@ function App(props) {
 
 	if (page == "gamePage") {
 		console.log("Current Turn:" + currTurn);
-		console.log("myID" + myID);
+		console.log("myID: " + myID);
 		return (
 			<>
+				{myID == currTurn && <div>{currWord}</div>}
 				<GameHeader roomCode={currentRoomCode} />
 				<div className="header py-2">
 					<p>
