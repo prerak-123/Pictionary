@@ -11,6 +11,7 @@ app.get("/", (req, res) => {
 	res.send("Hello World!");
 });
 
+let randomWord = "";
 const words = [
 	"paper",
 	"airport",
@@ -182,6 +183,17 @@ io.on("connection", (socket) => {
 		io.to(users[socket.id]["room"]).emit("serverChangeColor", data);
 	});
 
+	socket.on("guess", (data) => {
+		console.log(data);
+		if(data != randomWord){
+			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], data, "white"]);
+		}
+
+		else{
+			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], "Guessed Correctly!", "yellow"])
+		}
+	})
+
 	socket.on("disconnect", () => {
 		console.log("Bye");
 		userRoomCode = users[socket.id]["room"];
@@ -210,11 +222,13 @@ io.on("connection", (socket) => {
 	function gameLoop(roomCode) {
 		let round = 1;
 		const MAX_ROUNDS = 3;
-		const MAX_TIME = 60;
+		const MAX_TIME = 100000000000;
 		let time = MAX_TIME;
 		let currTurn = 0;
 
-		let randomWord = generateWord();
+		randomWord = generateWord();
+
+		
 
 		io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 
@@ -228,7 +242,16 @@ io.on("connection", (socket) => {
 			
 			time = time - 1;
 			if (time < 0) {
+				io.to(roomCode).emit("currTurn", "X");
+
 				io.to(roomCode).emit("nextTurn", "");
+
+
+				var start = new Date().getTime();
+				var end = start;
+				while(end < start + 5000) {
+					end = new Date().getTime();
+				}
 
 				randomWord = generateWord();
 

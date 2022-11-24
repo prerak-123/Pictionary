@@ -113,10 +113,8 @@ function makeRoom(e) {
 }
 
 function GameHeader(props) {
-
 	const [gameTime, changeGameTime] = React.useState(60);
 	const [gameRound, changeGameRound] = React.useState(1);
-
 
 	socket.on("gameTime", (data) => {
 		changeGameTime(data);
@@ -129,23 +127,22 @@ function GameHeader(props) {
 	return (
 		<div className="game__header">
 			<div>Time Remaining: {gameTime}</div>
-			<div>{props.roomCode}</div>
+			<div>Room Code: {props.roomCode}</div>
 			<div>Round: {gameRound}/3</div>
 		</div>
 	);
 }
 
 function ChatBox(props) {
-	const [messages, changeMessages] = React.useState([
-		["Prerak", "Flag"],
-		["Prerak", "Flag"],
-		["Yash", "Rectangle"],
-	]);
+	const [messages, changeMessages] = React.useState([]);
 
+	socket.on("displayMessage", (data) => {
+		changeMessages([...messages, data]);
+	})
 	return (
 		<div className="messages">
-			{messages.map((elem, index) => (
-				<div key={index} className="user__message">
+			{messages.slice(0).reverse().map((elem, index) => (
+				<div key={index} className="user__message" style={{ color: elem[2] }}>
 					{elem[0]}: {elem[1]}
 				</div>
 			))}
@@ -223,11 +220,11 @@ function App(props) {
 
 	socket.on("serverWord", (data) => {
 		changecurrWord(data);
-	})
+	});
 
-	socket.on("nextTurn", (data) =>{
+	socket.on("nextTurn", (data) => {
 		changecurrWord("");
-	})
+	});
 
 	if (page == "userName") {
 		return (
@@ -372,13 +369,24 @@ function App(props) {
 		console.log("myID: " + myID);
 		return (
 			<>
-				{myID == currTurn && <div>{currWord}</div>}
 				<GameHeader roomCode={currentRoomCode} />
 				<div className="header py-2">
 					<p>
 						Pictionary <i className="bi bi-pencil-fill" />
 					</p>
 				</div>
+
+				{currTurn == myID && (
+					<div className="curr__word">
+					<h2>Your Word: {currWord}</h2>
+				</div>
+				)}
+			{currTurn == "X" && (
+				<div className="curr__word">
+				<h2>Waiting for Next Round to Start</h2>
+			</div>
+			)}
+
 				<div className="sketch__div">
 					{currTurn == myID && (
 						<div className="canvas__buttons">
@@ -439,10 +447,17 @@ function App(props) {
 					</div>
 					<div className="chat__box">
 						{currTurn == myID ? "My Turn" : "Rishit"}
-						<ChatBox />
-						<form className="mx-auto">
-							<input placeholder="Guess" className="my-2" />
-						</form>
+						<ChatBox/>
+						{myID != currTurn && <form className="mx-auto" onSubmit={(e) =>{
+							e.preventDefault();
+							let guess = document.getElementById("guess").value;
+							console.log(guess);
+							document.getElementById("guess").value = "";
+							socket.emit("guess", guess);
+
+						}}>
+							<input id="guess" placeholder="Guess" className="my-2 w-100" />
+						</form>}
 					</div>
 				</div>
 			</>
