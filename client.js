@@ -113,8 +113,10 @@ function makeRoom(e) {
 }
 
 function GameHeader(props) {
+
 	const [gameTime, changeGameTime] = React.useState(60);
 	const [gameRound, changeGameRound] = React.useState(1);
+
 
 	socket.on("gameTime", (data) => {
 		changeGameTime(data);
