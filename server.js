@@ -183,14 +183,16 @@ io.on("connection", (socket) => {
 		io.to(users[socket.id]["room"]).emit("serverChangeColor", data);
 	});
 
-	socket.on("guess", (data) => {
+	socket.on("guess", (data, id) => {
 		console.log(data);
 		if(data != randomWord){
 			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], data, "white"]);
+			io.to(id).emit("playsound", "audiowrong");
 		}
 
 		else{
-			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], "Guessed Correctly!", "yellow"])
+			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], "Guessed Correctly!", "yellow"]);
+			io.to(id).emit("playsound", "audioright");
 		}
 	})
 
@@ -244,7 +246,7 @@ io.on("connection", (socket) => {
 			if (time < 0) {
 				io.to(roomCode).emit("currTurn", "X");
 
-				io.to(roomCode).emit("roundchangesound", "audioround");
+				io.to(roomCode).emit("playsound", "audioround");
 
 				io.to(roomCode).emit("nextTurn", "");
 

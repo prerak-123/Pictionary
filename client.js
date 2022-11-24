@@ -143,7 +143,7 @@ function ChatBox(props) {
 		<div className="messages">
 			{messages.slice(0).reverse().map((elem, index) => (
 				<div key={index} className="user__message" style={{ color: elem[2] }}>
-					{elem[0]}: {elem[1]}
+					{elem[0]}{elem[2] != "yellow" && ":"} {elem[1]}
 				</div>
 			))}
 		</div>
@@ -157,7 +157,7 @@ document.addEventListener("keydown", function (e) {
 });
 
 var sr = null;
-socket.on("roundchangesound", (data) => {
+socket.on("playsound", (data) => {
     sr = document.getElementById(data);
     sr.play();
 });
@@ -459,7 +459,7 @@ function App(props) {
 							let guess = document.getElementById("guess").value;
 							console.log(guess);
 							document.getElementById("guess").value = "";
-							socket.emit("guess", guess);
+							socket.emit("guess", guess, myID);
 
 						}}>
 							<input id="guess" placeholder="Guess" className="my-2 w-100" />
