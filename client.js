@@ -159,6 +159,12 @@ document.addEventListener("keydown", function (e) {
 	s.play();
 });
 
+var sr = null;
+socket.on("roundchangesound", (data) => {
+    sr = document.getElementById(data);
+    sr.play();
+});
+
 function App(props) {
 	const [myName, changeMyName] = React.useState("");
 	const [myID, changeMyID] = React.useState("");

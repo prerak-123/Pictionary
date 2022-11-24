@@ -228,6 +228,8 @@ io.on("connection", (socket) => {
 			
 			time = time - 1;
 			if (time < 0) {
+				io.to(roomCode).emit("roundchangesound", "audioround");
+
 				io.to(roomCode).emit("nextTurn", "");
 
 				randomWord = generateWord();
