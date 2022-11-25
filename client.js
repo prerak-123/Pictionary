@@ -212,7 +212,6 @@ function App(props) {
 
 	socket.on("userID", (data) => {
 		changeMyID(data);
-		console.log(myID);
 	});
 
 	React.useEffect(() => {
@@ -257,7 +256,6 @@ function App(props) {
 	});
 
 	socket.on("currTurn", (data) => {
-		console.log(data);
 		changeCurrTurn(data);
 	});
 
@@ -418,9 +416,6 @@ function App(props) {
 	}
 
 	if (page == "gamePage") {
-		console.log("Current Turn:" + currTurn);
-		console.log("myID: " + myID);
-		console.log(currTurn);
 		return (
 			<>
 				<GameHeader roomCode={currentRoomCode} />
@@ -510,7 +505,6 @@ function App(props) {
 								onSubmit={(e) => {
 									e.preventDefault();
 									let guess = document.getElementById("guess").value;
-									console.log(guess);
 									document.getElementById("guess").value = "";
 									socket.emit("guess", guess, myID);
 								}}

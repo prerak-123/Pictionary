@@ -151,7 +151,6 @@ function App(props) {
   const [winner, changeWinner] = React.useState("");
   socket.on("userID", data => {
     changeMyID(data);
-    console.log(myID);
   });
   React.useEffect(() => {
     window.isMyTurn = currTurn == myID;
@@ -189,7 +188,6 @@ function App(props) {
     changePage("gamePage");
   });
   socket.on("currTurn", data => {
-    console.log(data);
     changeCurrTurn(data);
   });
   socket.on("serverWord", data => {
@@ -304,9 +302,6 @@ function App(props) {
     }, index + 1, ". ", name[1], " ", name[0] == myID && "(Me)"))))));
   }
   if (page == "gamePage") {
-    console.log("Current Turn:" + currTurn);
-    console.log("myID: " + myID);
-    console.log(currTurn);
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(GameHeader, {
       roomCode: currentRoomCode
     }), /*#__PURE__*/React.createElement("div", {
@@ -381,7 +376,6 @@ function App(props) {
       onSubmit: e => {
         e.preventDefault();
         let guess = document.getElementById("guess").value;
-        console.log(guess);
         document.getElementById("guess").value = "";
         socket.emit("guess", guess, myID);
       }
