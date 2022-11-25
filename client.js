@@ -208,6 +208,7 @@ function App(props) {
 	const [btnType, changeBtnType] = React.useState("copy");
 	const [currWord, changecurrWord] = React.useState("");
 	const [guessedWord, changeGuessedWord] = React.useState(false);
+	const [winner, changeWinner] = React.useState("");
 
 	socket.on("userID", (data) => {
 		changeMyID(data);
@@ -241,8 +242,8 @@ function App(props) {
 			alert(data[1]);
 			return;
 		} else {
-			changePage("waitPlayers");
 			changeRoomCode(data[1]);
+			data[2] ? changePage("gamePage") : changePage("waitPlayers");
 		}
 	});
 
@@ -272,6 +273,11 @@ function App(props) {
 	socket.on("correctGuess", (data) => {
 		changeGuessedWord(true);
 	});
+
+	socket.on("gameOver", (data) => {
+		changePage("showWinner");
+		changeWinner(data);
+	})
 
 	if (page == "userName") {
 		return (
@@ -528,6 +534,30 @@ function App(props) {
 				</div>
 			</>
 		);
+	}
+
+	if(page == "showWinner"){
+		return(
+			<>
+				<div className="header py-2">
+					<p>
+						Pictionary <i className="bi bi-pencil-fill" />
+					</p>
+				</div>
+				<div className="mx-auto">
+					<Scorecard/>
+				</div>
+				<div className="winner m-auto">
+					<img src="images/winner.gif" width={"200vw"}/>
+					<div className="my-auto mx-5">
+						<h1>Winner: {winner}</h1>
+						<form>
+							<button className="btn btn-lg btn-primary">Click Here To Play Again!</button>
+						</form>
+					</div>
+				</div>
+			</>
+		)
 	}
 }
 

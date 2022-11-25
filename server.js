@@ -86,10 +86,10 @@ function generateString(length) {
 	return result;
 }
 
-function generateWord(){
+function generateWord() {
 	let ind1 = Math.floor(Math.random() * words.length);
 
-	return(words[ind1]);
+	return words[ind1];
 }
 
 io.on("connection", (socket) => {
@@ -102,7 +102,6 @@ io.on("connection", (socket) => {
 
 	socket.on("userName", (data) => {
 		users[socket.id]["name"] = data;
-		console.log(users);
 	});
 
 	socket.on("makeRoom", (data) => {
@@ -115,20 +114,16 @@ io.on("connection", (socket) => {
 		do {
 			roomCode = generateString(5);
 		} while (roomCodes.hasOwnProperty(roomCode));
-		console.log(roomCode);
 
 		socket.join(roomCode);
 		roomCodes[roomCode] = [socket.id];
 		users[socket.id]["room"] = roomCode;
 
-		console.log(roomCodes);
 		socket.emit("newRoomCode", roomCode);
 
 		const userData = roomCodes[roomCode].map((entry) => {
 			return [entry, users[entry]["name"]];
 		});
-
-		console.log(userData);
 
 		io.to(roomCode).emit("playersInfo", userData);
 	});
@@ -160,9 +155,13 @@ io.on("connection", (socket) => {
 
 		io.to(data).emit("playersInfo", userData);
 
-		console.log(userData);
 		users[socket.id]["room"] = data;
-		socket.emit("responseJoinRoom", [true, data]);
+		if (data in gamesInfo) {
+			gamesInfo[data]["playersScore"].push([socket.id, 0]);
+			socket.emit("responseJoinRoom", [true, data, true]);
+		} else {
+			socket.emit("responseJoinRoom", [true, data, false]);
+		}
 	});
 
 	socket.on("startGame", (data) => {
@@ -172,19 +171,19 @@ io.on("connection", (socket) => {
 		}
 
 		io.to(users[socket.id]["room"]).emit("serverStartGame", true);
-		const playersScoreArr = roomCodes[users[socket.id]["room"]].map((elem, index) => {
-			return [elem, 0];
-		});
-
-		console.log(playersScoreArr);
+		const playersScoreArr = roomCodes[users[socket.id]["room"]].map(
+			(elem, index) => {
+				return [elem, 0];
+			}
+		);
 
 		gamesInfo[users[socket.id]["room"]] = {
 			currWord: "",
-			playersScore : playersScoreArr,
+			playersScore: playersScoreArr,
 			time: 0,
 			guessScore: [],
-			currTurn: 0
-		}
+			currTurn: 0,
+		};
 
 		gameLoop(users[socket.id]["room"]);
 	});
@@ -198,24 +197,36 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("guess", (data, id) => {
-		console.log(data);
-		if(data != gamesInfo[users[socket.id]["room"]]["currWord"]){
-			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], data, "white"]);
+		if (data != gamesInfo[users[socket.id]["room"]]["currWord"]) {
+			io.to(users[socket.id]["room"]).emit("displayMessage", [
+				users[socket.id]["name"],
+				data,
+				"white",
+			]);
 			io.to(id).emit("playsound", "audiowrong");
+		} else {
+			const playersIndex = gamesInfo[users[socket.id]["room"]][
+				"playersScore"
+			].findIndex((data) => data[0] == socket.id);
+
+			if (playersIndex > -1) {
+				gamesInfo[users[socket.id]["room"]]["playersScore"][playersIndex][1] +=
+					gamesInfo[users[socket.id]["room"]]["time"];
+
+				gamesInfo[users[socket.id]["room"]]["guessScore"].push(
+					gamesInfo[users[socket.id]["room"]]["time"]
+				);
+
+				io.to(users[socket.id]["room"]).emit("displayMessage", [
+					users[socket.id]["name"],
+					"Guessed Correctly!",
+					"yellow",
+				]);
+				io.to(id).emit("playsound", "audioright");
+				socket.emit("correctGuess", "");
+			}
 		}
-
-		else{
-			const playersIndex = gamesInfo[users[socket.id]["room"]]["playersScore"].findIndex((data) => data[0] == socket.id);
-
-			gamesInfo[users[socket.id]["room"]]["playersScore"][playersIndex][1] += gamesInfo[users[socket.id]["room"]]["time"];
-
-			gamesInfo[users[socket.id]["room"]]["guessScore"].push(gamesInfo[users[socket.id]["room"]]["time"]);
-
-			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], "Guessed Correctly!", "yellow"]);
-			io.to(id).emit("playsound", "audioright");
-			socket.emit("correctGuess", "");
-		}
-	})
+	});
 
 	socket.on("disconnect", () => {
 		console.log("Bye");
@@ -240,6 +251,16 @@ io.on("connection", (socket) => {
 		});
 
 		io.to(userRoomCode).emit("playersInfo", userData);
+
+		if (userRoomCode in gamesInfo && userRoomCode in roomCodes) {
+			if (index <= gamesInfo[userRoomCode]["currTurn"]) {
+				gamesInfo[userRoomCode]["currTurn"] =
+					(gamesInfo[userRoomCode]["currTurn"] -
+						1 +
+						roomCodes[userRoomCode].length) %
+					roomCodes[userRoomCode].length;
+			}
+		}
 	});
 
 	function gameLoop(roomCode) {
@@ -250,13 +271,20 @@ io.on("connection", (socket) => {
 
 		gamesInfo[roomCode]["currWord"] = generateWord();
 
-		
+		io.to(roomCode).emit(
+			"currTurn",
+			roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]
+		);
 
-		io.to(roomCode).emit("currTurn", roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]);
+		io.to(roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]).emit(
+			"serverWord",
+			gamesInfo[roomCode]["currWord"]
+		);
 
-		io.to(roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]).emit("serverWord", gamesInfo[roomCode]["currWord"]);
-
-		const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map((elem) => [users[elem[0]]["name"],[elem[1]]])
+		const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map((elem) => [
+			users[elem[0]]["name"],
+			[elem[1]],
+		]);
 		io.to(roomCode).emit("serverScore", playersScoreEmit);
 
 		let gameInterval = setInterval(() => {
@@ -265,60 +293,95 @@ io.on("connection", (socket) => {
 				delete gamesInfo[roomCode];
 				return;
 			}
-			
-			gamesInfo[roomCode]["time"] = gamesInfo[roomCode]["time"] - 1;
-			if (gamesInfo[roomCode]["time"] < 0) {
 
+			gamesInfo[roomCode]["time"] = gamesInfo[roomCode]["time"] - 1;
+			if (gamesInfo[roomCode]["time"] < 0 || gamesInfo[roomCode]["guessScore"].length == roomCodes[roomCode].length - 1) {
 				let mainScore = 0;
 
-				gamesInfo[roomCode]["guessScore"].map((data) => mainScore += data);
+				gamesInfo[roomCode]["guessScore"].map((data) => (mainScore += data));
 
-				gamesInfo[roomCode]["guessScore"].length != 0 ? mainScore = Math.floor(mainScore / gamesInfo[roomCode]["guessScore"].length) : mainScore = mainScore;
+				gamesInfo[roomCode]["guessScore"].length != 0
+					? (mainScore = Math.floor(
+							(mainScore / gamesInfo[roomCode]["guessScore"].length) * 0.8
+					  ))
+					: (mainScore = mainScore);
 
 				mainScore += 20;
 
 				gamesInfo[roomCode]["guessScore"] = [];
 
-				const playersIndex = gamesInfo[users[socket.id]["room"]]["playersScore"].findIndex((data) => data[0] == roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]);
+				if (socket.id in users) {
+					const playersIndex = gamesInfo[users[socket.id]["room"]][
+						"playersScore"
+					].findIndex(
+						(data) =>
+							data[0] == roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]
+					);
 
-				gamesInfo[users[socket.id]["room"]]["playersScore"][playersIndex][1] += mainScore;
+					if (playersIndex > -1) {
+						gamesInfo[users[socket.id]["room"]]["playersScore"][
+							playersIndex
+						][1] += mainScore;
+					}
+				}
 
-				io.to(roomCode).emit("displayMessage", ["irrelevant", gamesInfo[roomCode]["currWord"], "pink"]);
+				io.to(roomCode).emit("displayMessage", [
+					"irrelevant",
+					gamesInfo[roomCode]["currWord"],
+					"pink",
+				]);
 
-				const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map((elem) => [users[elem[0]]["name"],[elem[1]]])
+				const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map(
+					(elem) =>
+						elem[0] in users
+							? [users[elem[0]]["name"], [elem[1]]]
+							: ["Disconnected", elem[1]]
+				);
 				io.to(roomCode).emit("serverScore", playersScoreEmit);
 
 				io.to(roomCode).emit("playsound", "audioround");
 
 				io.to(roomCode).emit("nextTurn", "");
 
-
 				var start = new Date().getTime();
 				var end = start;
-				while(end < start + 5000) {
+				while (end < start + 5000) {
 					end = new Date().getTime();
 				}
 
 				gamesInfo[roomCode]["currWord"] = generateWord();
 
 				gamesInfo[roomCode]["time"] = MAX_TIME;
-				gamesInfo[roomCode]["currTurn"] = (gamesInfo[roomCode]["currTurn"] + 1) % roomCodes[roomCode].length;
-				if(gamesInfo[roomCode]["currTurn"] == 0){
-
+				gamesInfo[roomCode]["currTurn"] =
+					(gamesInfo[roomCode]["currTurn"] + 1) % roomCodes[roomCode].length;
+				if (gamesInfo[roomCode]["currTurn"] == 0) {
 					round = round + 1;
-					if(round <= MAX_ROUNDS){
+					if (round <= MAX_ROUNDS) {
 						io.to(roomCode).emit("gameRound", round);
-					}
-
-					else{
-						io.to(roomCode).emit("gameOver", "");
+					} else {
+						let maxScore = -1;
+						let maxID;
+						for(let i = 0; i < gamesInfo[roomCode]["playersScore"].length; i++){
+							if(gamesInfo[roomCode]["playersScore"][i][0] in users){
+								if(gamesInfo[roomCode]["playersScore"][i][1] > maxScore){
+									maxID = gamesInfo[roomCode]["playersScore"][i][0];
+									maxScore = gamesInfo[roomCode]["playersScore"][i][1];
+								}
+							}
+						}
+						maxID != undefined ? io.to(roomCode).emit("gameOver", users[maxID]["name"]) : io.to(roomCode).emit("gameOver", "");
 						clearInterval(gameInterval);
 						return;
 					}
-
 				}
-				io.to(roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]).emit("serverWord", gamesInfo[roomCode]["currWord"]);
-				io.to(roomCode).emit("currTurn", roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]);
+				io.to(roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]).emit(
+					"serverWord",
+					gamesInfo[roomCode]["currWord"]
+				);
+				io.to(roomCode).emit(
+					"currTurn",
+					roomCodes[roomCode][gamesInfo[roomCode]["currTurn"]]
+				);
 			}
 
 			io.to(roomCode).emit("gameTime", gamesInfo[roomCode]["time"]);

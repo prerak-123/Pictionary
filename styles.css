@@ -211,3 +211,9 @@
 
 }
 
+.winner{
+    display: flex;
+    flex-direction: row;
+    font-family: 'Rubik Bubbles', cursive;
+
+}
