@@ -180,7 +180,9 @@ io.on("connection", (socket) => {
 
 		gamesInfo[users[socket.id]["room"]] = {
 			currWord: "",
-			playersScore : playersScoreArr
+			playersScore : playersScoreArr,
+			time: 0,
+			guessScore: []
 		}
 
 		gameLoop(users[socket.id]["room"]);
@@ -202,6 +204,12 @@ io.on("connection", (socket) => {
 		}
 
 		else{
+			const playersIndex = gamesInfo[users[socket.id]["room"]]["playersScore"].findIndex((data) => data[0] == socket.id);
+
+			gamesInfo[users[socket.id]["room"]]["playersScore"][playersIndex][1] += gamesInfo[users[socket.id]["room"]]["time"];
+
+			gamesInfo[users[socket.id]["room"]]["guessScore"].push(gamesInfo[users[socket.id]["room"]]["time"]);
+
 			io.to(users[socket.id]["room"]).emit("displayMessage", [users[socket.id]["name"], "Guessed Correctly!", "yellow"]);
 			io.to(id).emit("playsound", "audioright");
 			socket.emit("correctGuess", "");
@@ -236,8 +244,8 @@ io.on("connection", (socket) => {
 	function gameLoop(roomCode) {
 		let round = 1;
 		const MAX_ROUNDS = 3;
-		const MAX_TIME = 20;
-		let time = MAX_TIME;
+		const MAX_TIME = 60;
+		gamesInfo[roomCode]["time"] = MAX_TIME;
 		let currTurn = 0;
 
 		gamesInfo[roomCode]["currWord"] = generateWord();
@@ -248,6 +256,9 @@ io.on("connection", (socket) => {
 
 		io.to(roomCodes[roomCode][currTurn]).emit("serverWord", gamesInfo[roomCode]["currWord"]);
 
+		const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map((elem) => [users[elem[0]]["name"],[elem[1]]])
+		io.to(roomCode).emit("serverScore", playersScoreEmit);
+
 		let gameInterval = setInterval(() => {
 			if (!(roomCode in roomCodes)) {
 				clearInterval(gameInterval);
@@ -255,11 +266,29 @@ io.on("connection", (socket) => {
 				return;
 			}
 			
-			time = time - 1;
-			if (time < 0) {
+			gamesInfo[roomCode]["time"] = gamesInfo[roomCode]["time"] - 1;
+			if (gamesInfo[roomCode]["time"] < 0) {
+
+				let mainScore = 0;
+
+				gamesInfo[roomCode]["guessScore"].map((data) => mainScore += data);
+
+				gamesInfo[roomCode]["guessScore"].length != 0 ? mainScore = Math.floor(mainScore / gamesInfo[roomCode]["guessScore"].length) : mainScore = mainScore;
+
+				mainScore += 20;
+
+				gamesInfo[roomCode]["guessScore"] = [];
+
+				const playersIndex = gamesInfo[users[socket.id]["room"]]["playersScore"].findIndex((data) => data[0] == roomCodes[roomCode][currTurn]);
+
+				gamesInfo[users[socket.id]["room"]]["playersScore"][playersIndex][1] += mainScore;
+				
 				io.to(roomCode).emit("displayMessage", ["irrelevant", gamesInfo[roomCode]["currWord"], "pink"]);
+
+				const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map((elem) => [users[elem[0]]["name"],[elem[1]]])
+				io.to(roomCode).emit("serverScore", playersScoreEmit);
+
 				io.to(roomCode).emit("playsound", "audioround");
-				io.to(roomCode).emit("currTurn", "X");
 
 				io.to(roomCode).emit("nextTurn", "");
 
@@ -272,7 +301,7 @@ io.on("connection", (socket) => {
 
 				gamesInfo[roomCode]["currWord"] = generateWord();
 
-				time = MAX_TIME;
+				gamesInfo[roomCode]["time"] = MAX_TIME;
 				currTurn = (currTurn + 1) % roomCodes[roomCode].length;
 				if(currTurn == 0){
 
@@ -292,7 +321,7 @@ io.on("connection", (socket) => {
 				io.to(roomCode).emit("currTurn", roomCodes[roomCode][currTurn]);
 			}
 
-			io.to(roomCode).emit("gameTime", time);
+			io.to(roomCode).emit("gameTime", gamesInfo[roomCode]["time"]);
 		}, 1000);
 	}
 });

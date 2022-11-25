@@ -133,34 +133,30 @@ function GameHeader(props) {
 	);
 }
 
-function Scorecard(props){
+function Scorecard(props) {
+	const [scores, changeScores] = React.useState([])
+
+	socket.on("serverScore", (data) => changeScores(data));
 	return (
-		<div>
+		<div className="my-auto">
 			<table>
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>Score</th>
-							</tr>
-						</thead>
-						<tbody>
-			{props.score.map((score, index) => (
-				
-					
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Score</th>
+					</tr>
+				</thead>
+				<tbody>
+					{scores.map((score, index) => (
 						<tr>
 							<td>{score[0]}</td>
-							{/* <td width="300px"></td> */}
 							<td>{score[1]}</td>
 						</tr>
-					
-					
-				
-				
-			))}
-			</tbody>
+					))}
+				</tbody>
 			</table>
 		</div>
-		);
+	);
 }
 
 function ChatBox(props) {
@@ -168,21 +164,23 @@ function ChatBox(props) {
 
 	socket.on("displayMessage", (data) => {
 		changeMessages([...messages, data]);
-	})
+	});
 
 	socket.on("nextTurn", () => {
 		changeMessages([]);
-	})
+	});
 	return (
 		<div className="messages">
-			{messages.slice(0).reverse().map((elem, index) => (
-				<div key={index} className="user__message" style={{ color: elem[2] }}>
-					{elem[2] == "white" && elem[0] + ": " + elem[1]}
-					{elem[2] == "yellow" && elem[0] + elem[1]}
-					{elem[2] == "pink" && "Correct Word: " + elem[1]}
-
-				</div>
-			))}
+			{messages
+				.slice(0)
+				.reverse()
+				.map((elem, index) => (
+					<div key={index} className="user__message" style={{ color: elem[2] }}>
+						{elem[2] == "white" && elem[0] + ": " + elem[1]}
+						{elem[2] == "yellow" && elem[0] + " " + elem[1]}
+						{elem[2] == "pink" && "Correct Word: " + elem[1]}
+					</div>
+				))}
 		</div>
 	);
 }
@@ -195,8 +193,8 @@ document.addEventListener("keydown", function (e) {
 
 var sr = null;
 socket.on("playsound", (data) => {
-    sr = document.getElementById(data);
-    sr.play();
+	sr = document.getElementById(data);
+	sr.play();
 });
 
 function App(props) {
@@ -273,7 +271,7 @@ function App(props) {
 
 	socket.on("correctGuess", (data) => {
 		changeGuessedWord(true);
-	})
+	});
 
 	if (page == "userName") {
 		return (
@@ -416,6 +414,7 @@ function App(props) {
 	if (page == "gamePage") {
 		console.log("Current Turn:" + currTurn);
 		console.log("myID: " + myID);
+		console.log(currTurn);
 		return (
 			<>
 				<GameHeader roomCode={currentRoomCode} />
@@ -427,16 +426,12 @@ function App(props) {
 
 				{currTurn == myID && (
 					<div className="curr__word">
-					<h2>Your Word: {currWord}</h2>
-				</div>
+						<h2>Your Word: {currWord}</h2>
+					</div>
 				)}
-			{currTurn == "X" && (
-				<div className="curr__word">
-				<h2>Waiting for Next Round to Start</h2>
-			</div>
-			)}
 
 				<div className="sketch__div">
+					<Scorecard/>
 					{currTurn == myID && (
 						<div className="canvas__buttons">
 							<button
@@ -495,19 +490,40 @@ function App(props) {
 						<canvas id="paint" className="paint__canvas"></canvas>
 					</div>
 					<div className="chat__box">
-						{currTurn == myID ? "My Turn" : "Rishit"}
+						{playersInfo.map((elem, index) => (
+							<div className="curr__turn">
+								{" "}
+								{elem[0] == currTurn && <h4>Current Turn: {elem[1]}</h4>}
+							</div>
+						))}
 
-						<ChatBox/>
-						{(myID != currTurn && !guessedWord) && <form className="mx-auto" onSubmit={(e) =>{
-							e.preventDefault();
-							let guess = document.getElementById("guess").value;
-							console.log(guess);
-							document.getElementById("guess").value = "";
-							socket.emit("guess", guess, myID);
-
-						}}>
-							<input id="guess" placeholder="Guess" className="my-2 w-100" />
-						</form>}
+						<ChatBox />
+						{myID != currTurn && !guessedWord && (
+							<form
+								className="mx-auto"
+								onSubmit={(e) => {
+									e.preventDefault();
+									let guess = document.getElementById("guess").value;
+									console.log(guess);
+									document.getElementById("guess").value = "";
+									socket.emit("guess", guess, myID);
+								}}
+							>
+								<div class="input-group mb-3 my-3">
+									<span className="input-group-text bg-primary text-white" id="basic-addon1">
+										{myName}
+									</span>
+									<input
+										type="text"
+										className="form-control"
+										placeholder="Guess"
+										aria-label="Username"
+										aria-describedby="basic-addon1"
+										id="guess"
+									/>
+								</div>
+							</form>
+						)}
 					</div>
 				</div>
 			</>
