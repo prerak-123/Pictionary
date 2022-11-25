@@ -515,7 +515,7 @@ function App(props) {
 									socket.emit("guess", guess, myID);
 								}}
 							>
-								<div class="input-group mb-3 my-3">
+								<div className="input-group mb-3 my-3">
 									<span className="input-group-text bg-primary text-white" id="basic-addon1">
 										{myName}
 									</span>
@@ -544,9 +544,9 @@ function App(props) {
 						Pictionary <i className="bi bi-pencil-fill" />
 					</p>
 				</div>
-				<div className="mx-auto">
+				{/* <div className="mx-auto">
 					<Scorecard/>
-				</div>
+				</div> */}
 				<div className="winner m-auto">
 					<img src="images/winner.gif" width={"200vw"}/>
 					<div className="my-auto mx-5">

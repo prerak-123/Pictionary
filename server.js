@@ -295,7 +295,21 @@ io.on("connection", (socket) => {
 			}
 
 			gamesInfo[roomCode]["time"] = gamesInfo[roomCode]["time"] - 1;
-			if (gamesInfo[roomCode]["time"] < 0 || gamesInfo[roomCode]["guessScore"].length == roomCodes[roomCode].length - 1) {
+
+			if (gamesInfo[roomCode]["time"] == 1) {
+				const playersScoreEmit = gamesInfo[roomCode]["playersScore"].map(
+					(elem) =>
+						elem[0] in users
+							? [users[elem[0]]["name"], [elem[1]]]
+							: ["Disconnected", elem[1]]
+				);
+				io.to(roomCode).emit("serverScore", playersScoreEmit);
+			}
+			if (
+				gamesInfo[roomCode]["time"] < 0 ||
+				gamesInfo[roomCode]["guessScore"].length ==
+					roomCodes[roomCode].length - 1
+			) {
 				let mainScore = 0;
 
 				gamesInfo[roomCode]["guessScore"].map((data) => (mainScore += data));
@@ -361,15 +375,21 @@ io.on("connection", (socket) => {
 					} else {
 						let maxScore = -1;
 						let maxID;
-						for(let i = 0; i < gamesInfo[roomCode]["playersScore"].length; i++){
-							if(gamesInfo[roomCode]["playersScore"][i][0] in users){
-								if(gamesInfo[roomCode]["playersScore"][i][1] > maxScore){
+						for (
+							let i = 0;
+							i < gamesInfo[roomCode]["playersScore"].length;
+							i++
+						) {
+							if (gamesInfo[roomCode]["playersScore"][i][0] in users) {
+								if (gamesInfo[roomCode]["playersScore"][i][1] > maxScore) {
 									maxID = gamesInfo[roomCode]["playersScore"][i][0];
 									maxScore = gamesInfo[roomCode]["playersScore"][i][1];
 								}
 							}
 						}
-						maxID != undefined ? io.to(roomCode).emit("gameOver", users[maxID]["name"]) : io.to(roomCode).emit("gameOver", "");
+						maxID != undefined
+							? io.to(roomCode).emit("gameOver", users[maxID]["name"])
+							: io.to(roomCode).emit("gameOver", "");
 						clearInterval(gameInterval);
 						return;
 					}
